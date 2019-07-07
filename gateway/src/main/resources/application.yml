@@ -1,0 +1,70 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: geteway
+  profiles:
+    active: dev
+  redis:
+    host: 127.0.0.1
+    password:
+    database: 1
+    port: 6379
+  cloud:
+    gateway:
+      routes:
+      - id: account
+        uri: lb://account
+        filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 1
+            redis-rate-limiter.burstCapacity: 1
+            key-resolver: "#{@apiKeyResolver}" #SPEL表达式去的对应的bean
+        - StripPrefix=2
+        - AddResponseHeader=X-Response-Default-Foo, Default-Ba
+        predicates:
+        - Path=/v2/account/**
+      - id: order
+        uri: lb://order
+        filters:
+        - StripPrefix=2
+        - AddResponseHeader=X-Response-Default-Foo, Default-Ba
+        predicates:
+        - Path=/v2/order/**
+      - id: patient
+        uri: lb://patient
+        filters:
+        - StripPrefix=2
+        - AddResponseHeader=X-Response-Default-Foo, Default-Ba
+        predicates:
+        - Path=/v2/patient/**
+      - id: train
+        uri: lb://train
+        filters:
+        - StripPrefix=2
+        - AddResponseHeader=X-Response-Default-Foo, Default-Ba
+        predicates:
+        - Path=/v2/train/**
+      - id: efile
+        uri: lb://efile
+        filters:
+        - StripPrefix=2
+        - AddResponseHeader=X-Response-Default-Foo, Default-Ba
+        predicates:
+        - Path=/v2/efile/**
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 60000
